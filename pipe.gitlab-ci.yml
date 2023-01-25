@@ -1,0 +1,64 @@
+image: ubuntu:18.04
+
+stages:
+  - version
+  - variables
+  - test
+  - build
+  - artifact
+  # - deploy
+
+Version-Info:
+  stage: version
+  when: always
+  script:
+    - echo "==== maven version ===="
+    - cd /home/gitlab-runner/builds/Qyzny2Ct/0/gitlab-instance-747eb91a/pipelinetesting/
+    - chmod -R 777 /home/gitlab-runner/builds/Qyzny2Ct/0/gitlab-instance-747eb91a/pipelinetesting/
+    - mvn clean install
+    - mvn -version
+    - echo "==== jdk version ===="
+    - java -version
+
+Testing-Info:
+  stage: test
+  when: always
+  script: 
+    - sudo su
+    - echo "----Start testing----"
+    - cd /home/gitlab-runner/builds/Qyzny2Ct/0/gitlab-instance-747eb91a/pipelinetesting/
+    - mvn clean test
+
+
+
+Building-Info:
+  stage: build
+  when: always
+  script:
+    - sudo su
+    - echo "----start building----"
+    - cd /home/gitlab-runner/builds/Qyzny2Ct/0/gitlab-instance-747eb91a/pipelinetesting/
+    - mvn clean package -DskipTests
+    - chmod -R 777 target/
+    - echo "====Success===="
+  artifacts:
+    paths:
+      - target/*
+    expire_in: 2 days
+
+
+
+Artifact-Info:
+  stage: artifact
+  when: always
+  script:
+    - sudo su
+    - echo "======Deploying to Jfrog Artifactory====="
+    - sudo apt-get install curl -y
+    - cd /home/gitlab-runner/builds/Qyzny2Ct/0/gitlab-instance-747eb91a/pipelinetesting/
+    - chmod -R 777 target/
+    - cd target/
+    - curl -umohan@archimedis.io:cmVmdGtuOjAxOjE3MDU3MzQwMzE6V09sV2psREkzdkthcHNoaUpBc2luT042WEw5 -X POST "https://archi.jfrog.io/artifactory/abc/" 
+      -T sample-0.1.war
+    
+
